@@ -1,0 +1,131 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+data = read.csv("C:/Users/calvi/Downloads/paths.csv")
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+
+data[is.na(data)] <- 0
+
+good_players <- data %>%
+  filter(allstar == 1 | great == 1 | good == 1) %>%
+  filter(!is.na(college)) %>%
+  filter(college != '') %>%
+  group_by(college) %>%
+  summarise(total_count = n(), allstars = sum(allstar)) %>%
+  arrange(-total_count)
+
+good_players
+
+#Overcast, hot, normal, windy
+good_players %>%
+  mutate(college = fct_reorder(college, (total_count))) %>%
+  top_n(10, wt=total_count) %>%
+  ggplot(aes(x = college, y = total_count, fill = allstars)) +
+    geom_bar(stat = "identity")  +
+    coord_flip() +
+    labs(y = "Number of Top 120 Players",
+         x = "College Name",
+         fill = "AllStars") +
+    ggtitle("Colleges Producing the Most Top 120 NBA Players")
+  
+```
+
+```{r}
+players <- read.csv("C:/Users/calvi/Downloads/players.csv")
+players
+
+players %>%
+  filter((! is.na(college)) & (!is.na(rank))) %>%
+  filter(college != '') %>%
+  group_by(college) %>%
+  summarise(total_players = n(), avg_rank = mean(rank)) %>%
+  arrange(-total_players) %>%
+  top_n(10, wt = total_players) %>%
+  mutate(college = fct_reorder(college, (total_players))) %>%
+  ggplot(aes(x = college, y = total_players, fill = avg_rank)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    ggtitle("Number of Top 100 Highschool Recruits") +
+    labs(x = "Number of Players", y = "College",fill = "AVG Player Rank") 
+
+```
+
+```{r}
+players %>%
+  filter(college =="University of Kentucky") %>%
+  filter(! is.na(rank)) %>%
+  ggplot(aes(x = rank)) +
+    geom_histogram(bins = 10, aes(y = ..density..)) +
+    geom_density(lwd = 2, linetype = 2, color = 'red') +
+    ggtitle("Histogram of Kentucky Recruit Rankings") +
+    labs(subtitle = "A show of Kentucky's recruiting domination", 
+         x = "Recruit Ranking",
+         y = "Density") +
+    theme_light()
+
+```
+```{r}
+players %>%
+  filter(! is.na(draft_pk)) %>%
+  filter(rank < 45) %>%
+  group_by(rank) %>%
+  summarise(count = n(), avg_draft = mean(draft_pk)) %>%
+  ggplot(aes(x = rank, y = avg_draft)) +
+    geom_line() +
+    geom_point() +
+    geom_smooth(method='lm') +
+    ggtitle("Draft Pick by Highschool Rank") +
+    labs(x = "High School Ranking", y = "Average NBA Draft Pick",
+         subtitle = "For players that were drafterd out of college") 
+```
+
+
+
+```{r}
+players$rank_change <- players$rank - players$top_mean_wa_rank
+
+players %>%
+  filter(college == "University of Kentucky") %>%
+  filter(! is.na(draft_pk)) %>%
+  group_by(rank) %>%
+  summarise(count = n(), avg_draft = mean(draft_pk)) %>%
+  ggplot(aes(x = rank, y = avg_draft)) +
+    geom_line() +
+    geom_point() +
+    geom_smooth(method='lm') +
+    ggtitle("Draft Pick by Highschool Rank for Kentucky") +
+    labs(x = "High School Ranking", y = "Average NBA Draft Pick",
+         subtitle = "For players that were drafterd out of college") 
+  
+  
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
